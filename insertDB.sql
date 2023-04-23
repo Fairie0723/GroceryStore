@@ -1,2 +1,2 @@
-insert into customers values 
+insert into store.customers values
 (0,'John','Doe','johnDoe@mtsu.edu');

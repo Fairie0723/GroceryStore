@@ -1,37 +1,61 @@
 import socket
-import pymysql
 
-# Establish a connection to the MySQL server
-conn = pymysql.connect(user='root', password='Fairie072315!',
-                       host='127.0.0.1',
-                       database='STORE')
 
-# Create a cursor object to interact with the database
-cursor = conn.cursor()
+def main():
+    # set up the socket
+    host = '192.168.1.80'
+    port = 9980
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((host, port))
+    s.listen(1)
 
-# Set up the server socket
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('localhost', 8000))
-server_socket.listen()
+    print("[LISTENING] Server is listening on {}:{}".format(host, port))
 
-# Wait for a client to connect
-client_socket, client_address = server_socket.accept()
-print('Connected to', client_address)
+    # read the item list from a file
+    with open("items.txt", "r") as f:
+        items = dict(line.strip().split(", ") for line in f)
 
-# Receive data from the client and execute a SQL query
-while True:
-    data = client_socket.recv(1024).decode()
-    if not data:
-        break
-    cursor.execute(data)
-    result = cursor.fetchall()
-    client_socket.send(str(result).encode())
+    # create a dictionary to hold the prices for each item
+    prices = {}
+    for item, price in items.items():
+        prices[item] = float(price)
 
-# Fetch the results
-results = cursor.fetchall()
+    # accept connections from clients
+    while True:
+        conn, addr = s.accept()
+        print("[CONNECTED] Connected by {}:{}".format(addr[0], addr[1]))
 
-# Close the connection
-cursor.close()
-conn.close()
-client_socket.close()
-server_socket.close()
+        # receive items from the client
+        while True:
+            data = conn.recv(1024).decode()
+            if data == "done":
+                break
+
+            if data in prices:
+                price = prices[data]
+                if price == 0.0:
+                    response = "Item not available"
+                else:
+                    response = str(price)
+                    prices[data] = 0.0
+            else:
+                response = "Invalid item"
+
+            conn.send(response.encode())
+
+        # calculate the total cost and send it to the client
+        total = sum(prices.values())
+        response = "Items in cart:\n"
+        for item, price in prices.items():
+            if price > 0.0:
+                response += "- {}: ${:.2f}\n".format(item, price)
+        response += "Total: ${:.2f}".format(total)
+        conn.send(response.encode())
+
+        # close the connection
+        print("[DISCONNECTED] Disconnected by {}:{}".format(addr[0], addr[1]))
+        conn.close()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,5 @@
+cereal, 2.99
+milk, 1.99
+eggs, 0.99
+bread, 1.49
+cheese, 2.49
