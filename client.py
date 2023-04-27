@@ -1,18 +1,29 @@
 import socket
 
-def Main():
-    host = '192.168.1.80'
-    port = 9980
+host = 'localhost'
+port = 9999
 
-    s = socket.socket()
+
+def main():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
 
     print("[CONNECTED] Connected to {}:{}".format(host, port))
 
     cart = {}
+    print("====================================================")
+    print("====================================================")
+    print("======                                         =====")
+    print("======  WELCOME TO THE ONLINE GROCERY STORE    =====")
+    print("======                                         =====")
+    print("====================================================")
+    print("====================================================")
+    print("Please begin your order..."
+          "\nType 'done' to finish your order...")
 
     while True:
-        item = input("Enter an item to purchase (or type 'done' to finish): ")
+        item = input("Item: ")
+
         if item.lower() == 'done':
             break
         s.send(item.encode())
@@ -26,17 +37,23 @@ def Main():
                 print("{} added to cart. Price: ${:.2f}".format(item, price))
                 cart[item] = price
             except ValueError:
-                print("Invalid response from server: {}".format(data))
-
-    print("Items in cart:")
+                print("Item not available")
+    s.send("done".encode())
+    print("===== Items in cart =====")
     total = 0
     for item, price in cart.items():
-        print("- {}: ${:.2f}".format(item, price))
+        print("----- {}: ${:.2f}".format(item, price))
         total += price
-    print("Total: ${:.2f}".format(total))
+    print("=========================")
+    print("     Total: ${:.2f}".format(total))
 
-    s.close()
-    print("[DISCONNECTED] Disconnected from the server.")
+    print("\n==================================================")
+    print("THANK YOU FOR SHOPPING WITH US! COME AGAIN SOON!")
+    print("==================================================")
+
+    print("[DISCONNECTED]")
+    # s.close()
+
 
 if __name__ == '__main__':
-    Main()
+    main()
